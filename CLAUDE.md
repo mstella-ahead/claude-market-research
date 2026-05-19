@@ -64,3 +64,39 @@ These reference files are loaded by the skill at runtime, so changes take effect
 ## Outputs are never committed
 
 `runs/` and `*.pptx`/`*.xlsx`/`*.docx` are gitignored — they contain client research. Do not commit anything under `runs/`.
+
+## Known gotchas
+
+**Glean MCP is configured per-user, not in this repo.** There is intentionally no `.mcp.json` in the plugin. Glean MCP uses OAuth-via-SSO which is per-user — embedding the server URL here would break for any installer who hasn't pre-authorized it. Each user adds Glean as a Cowork connector at the user level (Customize → Connectors). Don't "fix" this by adding `.mcp.json`.
+
+**Sub-agent names are referenced by string.** Each agent file's `name:` frontmatter (`internal-researcher`, `external-researcher`, `consolidator`) is what the orchestrator passes to the Task tool. Renaming an agent requires updating `skills/company-research/SKILL.md` where those names appear in the dispatch prompts.
+
+**The plugin name is the slash command namespace.** Currently `/market-research:run`. Renaming the plugin in `plugin.json` changes every slash invocation; `marketplace.json` must match.
+
+**Deck rendering depends on the host pptx skill.** `skills/strategy-deck` delegates the actual `.pptx` build to `/mnt/skills/public/pptx/SKILL.md` (built into Cowork/Claude Code). For firm-specific branding the right hook is a template `.pptx` under `skills/strategy-deck/assets/`, referenced from `SKILL.md` — don't reimplement pptx generation.
+
+## Open enhancements (in priority order)
+
+1. **Disambiguation pre-check.** Before dispatching the parallel sub-agents, do one quick web search to confirm the entity and ask the user to confirm. Prevents running the full pipeline on the wrong company for ambiguous inputs ("AEP", "TPA", common abbreviations). Add as a Step 1.5 in `skills/company-research/SKILL.md` between "Create the run directory" and "Dispatch both researchers."
+
+2. **More aggressive people-search in `internal-researcher`.** Finding internal experts who already know the company or sector is the single highest-ROI Glean query for consulting work. The current prompt lists it as one of five searches; it should be a *required first* search with explicit instructions to surface 3+ relevant people before moving on.
+
+3. **Tie-breakers for over-subscribed Wave 1.** The current rubric handles under-supply (fewer than 3 strong Wave 1 candidates) but the more common real-world case is over-supply (5+ areas legitimately score top-right). Add explicit tie-breakers to `scoring_rubric.md`: data freshness, stakeholder buy-in proxy, prior delivery track record on similar work.
+
+4. **Sector-specific scoring rubric variants.** After 3–5 real-client runs, patterns will emerge (regulated industries weight compliance very differently). Split `scoring_rubric.md` into `scoring_rubric_generic.md` plus `_healthcare.md`, `_finance.md`, etc. Skill picks based on inferred sector from the brief.
+
+## Calibration
+
+The honest test isn't "did it produce a deck" — it's "would I send this deck." Expect 2–3 rounds of prompt tuning before output crosses that bar on a real client. Diagnostics to check after each run:
+
+- Does `internal_report.md` find things you *know* exist in Glean? (Tests internal-researcher's search aggression.)
+- Does `external_report.md` miss anything obvious? (Tests external-researcher's coverage.)
+- Does the consolidator flag conflicts you expected, or paper them over? (Most common failure mode — silent reconciliation.)
+- Are wave assignments defensible? Read `scoring_workings.md` and ask: would I stand behind these in a client meeting?
+
+## Things deliberately not built — don't add without thinking
+
+- **No `.mcp.json`** — see Glean MCP gotcha above.
+- **No hardcoded .pptx template** — branding is firm-specific; left as a customization point under `skills/strategy-deck/assets/`.
+- **No formal evals/test set** — useful for v0.2 once 3+ real example runs exist to evaluate against. Premature before then.
+- **No third research thread** — a "third source" (SEC filings, court records, etc.) is tempting but each new thread compounds reconciliation complexity quadratically. Stay with two threads until the consolidator is reliably good on two.
