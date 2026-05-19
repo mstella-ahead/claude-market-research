@@ -58,8 +58,8 @@ Single-thread research causes anchoring bias — whichever source the agent look
 
 ## Prerequisites
 
-- **Claude Cowork** (Claude Desktop on macOS or Windows, paid plan: Pro / Max / Team / Enterprise)
-- **Glean MCP connector** added in Cowork (one-time setup — see installation below). Without it, the plugin works external-only with the internal context flagged as missing.
+- **Claude Cowork** (Claude Desktop on macOS or Windows, paid plan: Pro / Max / Team / Enterprise), or **Claude Code** (the CLI)
+- **Glean MCP server** connected and named `glean_default` (one-time setup — see installation below). Without it, the plugin works external-only with the internal context flagged as missing.
 
 ## Installation
 
@@ -70,9 +70,21 @@ Edit two files first to replace placeholders:
 - `.claude-plugin/marketplace.json` → replace `Miltos Stella` and `mstella-ahead`
 - `plugins/market-research/.claude-plugin/plugin.json` → same
 
-### 2. Connect the Glean MCP server in Cowork
+### 2. Connect the Glean MCP server
 
-Open Claude Desktop → switch to the **Cowork** tab → click **Customize** in the sidebar → **Connectors** → add a new connector pointing at your company's Glean MCP endpoint.
+The `internal-researcher` sub-agent reaches internal knowledge through a Glean MCP server. **It must be named exactly `glean_default`** — the agent's tools are namespaced `mcp__glean_default__*`, so any other name leaves the internal research stream empty.
+
+**Claude Code (CLI)** — sub-agents run locally, so Glean is directly reachable:
+
+```bash
+claude mcp add glean_default https://<your-company>-be.glean.com/mcp/default --transport http --scope user
+```
+
+Then run `/mcp` and complete the OAuth sign-in.
+
+**Cowork** — Claude Desktop → **Cowork** tab → **Customize** → **Connectors** → add a Glean **Web** connector. A local stdio Glean server (e.g. one defined in `claude_desktop_config.json`) is *not* reachable from Cowork's cloud research sandbox; it must be a Web connector, which your Glean/Cowork admin may need to provision.
+
+For either path:
 
 - Endpoint URL: ask your Glean admin (typically `https://<your-company>-be.glean.com/mcp/default` or similar)
 - Auth: OAuth via your company's SSO (your admin may need to enable the Glean OAuth Authorization Server first)
@@ -164,7 +176,7 @@ claude-market-research/
 
 ## Troubleshooting
 
-**"Glean tools not available"** — The Glean MCP connector isn't set up. See Installation step 2. You can still run external-only by telling the agent to proceed; it will clearly flag the missing internal context in the brief.
+**"Glean tools not available"** — The Glean MCP server isn't set up, or it isn't named `glean_default` (the `internal-researcher` agent's tools are namespaced to that exact name). See Installation step 2; verify the connection with `/mcp` in Claude Code or the Connectors panel in Cowork. You can still run external-only by telling the agent to proceed; it will clearly flag the missing internal context in the brief.
 
 **"Both researchers returned almost nothing"** — Often means the company name is ambiguous (e.g., a holdco vs. subsidiary, name collision with a more famous entity). Re-run with a more specific name, e.g., `/market-research:run Acme Health Benefits LLC (subsidiary of Acme Corp)`.
 

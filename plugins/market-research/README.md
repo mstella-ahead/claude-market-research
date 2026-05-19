@@ -20,7 +20,7 @@ When you run `/market-research:run <company>`:
 
 ## Required external setup
 
-- Glean MCP connector configured in Cowork (Customize → Connectors → Glean).
+- A Glean MCP server connected and named exactly `glean_default` — in Claude Code via `claude mcp add glean_default <endpoint> --transport http --scope user`, or in Cowork as a Web connector (Customize → Connectors). See the repo [README](../../README.md#2-connect-the-glean-mcp-server) for full steps.
 
 Without Glean, the plugin runs external-only with the missing internal context clearly flagged.
 

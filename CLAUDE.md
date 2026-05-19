@@ -39,7 +39,7 @@ skills/strategy-deck       scores + builds deck  → runs/<slug>/proposal.pptx +
 
 ## Load-bearing invariants — do not break these
 
-1. **Tool isolation between researchers.** `internal-researcher` and `external-researcher` have deliberately **non-overlapping `tools:` frontmatter lists**. Internal gets `mcp__glean__*` only; external gets `WebSearch`/`WebFetch` only. This isolation is the entire reason the plugin exists (it prevents anchoring bias). If you edit either `tools:` list, you are changing a core guarantee — never give one researcher the other's tools, and never pass one's findings to the other.
+1. **Tool isolation between researchers.** `internal-researcher` and `external-researcher` have deliberately **non-overlapping `tools:` frontmatter lists**. Internal gets `mcp__glean_default__*` only; external gets `WebSearch`/`WebFetch` only. This isolation is the entire reason the plugin exists (it prevents anchoring bias). If you edit either `tools:` list, you are changing a core guarantee — never give one researcher the other's tools, and never pass one's findings to the other.
 
 2. **Parallel dispatch.** The orchestrator must spawn both researchers with two Task calls **in the same turn**. The instructions in `commands/run.md` and `skills/company-research/SKILL.md` enforce this; keep them consistent if you touch one.
 
@@ -67,7 +67,9 @@ These reference files are loaded by the skill at runtime, so changes take effect
 
 ## Known gotchas
 
-**Glean MCP is configured per-user, not in this repo.** There is intentionally no `.mcp.json` in the plugin. Glean MCP uses OAuth-via-SSO which is per-user — embedding the server URL here would break for any installer who hasn't pre-authorized it. Each user adds Glean as a Cowork connector at the user level (Customize → Connectors). Don't "fix" this by adding `.mcp.json`.
+**Glean MCP is configured per-user, not in this repo.** There is intentionally no `.mcp.json` in the plugin. Glean MCP uses OAuth-via-SSO which is per-user — embedding the server URL here would break for any installer who hasn't pre-authorized it. Each user wires Glean themselves: in Claude Code via `claude mcp add glean_default <endpoint> --transport http --scope user`, or in Cowork as a Web connector (Customize → Connectors). Don't "fix" this by adding `.mcp.json`.
+
+**The Glean MCP server must be named `glean_default`.** `agents/internal-researcher.md` declares its tools as `mcp__glean_default__*` — that namespace *is* the MCP server name. Name the server anything else and the agent's tools silently resolve to nothing, so `internal_report.md` comes back empty with no error. Like the sub-agent-name gotcha below, this name is load-bearing string-coupling. `glean_default` is Glean's own documented default, so the plugin standardizes on it. Its four wired tools — `search`, `chat`, `read_document`, `employee_search` — must be real Glean MCP tool names; check the server's tool list before adding more.
 
 **Sub-agent names are referenced by string.** Each agent file's `name:` frontmatter (`internal-researcher`, `external-researcher`, `consolidator`) is what the orchestrator passes to the Task tool. Renaming an agent requires updating `skills/company-research/SKILL.md` where those names appear in the dispatch prompts.
 

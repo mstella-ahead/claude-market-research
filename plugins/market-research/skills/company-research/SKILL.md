@@ -22,9 +22,9 @@ Single-thread research causes anchoring bias: whichever source the agent looks a
 
 ### Step 1: Preflight checks
 
-- Verify Glean MCP is connected. The simplest test: list available MCP tools and check for `mcp__glean__*`. If absent, tell the user:
+- Verify Glean MCP is connected. The simplest test: list available MCP tools and check for `mcp__glean_default__*`. If absent, tell the user:
 
-  > "Glean MCP isn't connected. To get the internal research stream, open Claude Desktop → Customize → Connectors → add Glean. Want me to proceed external-only for now? I'll clearly flag the missing internal context in the brief."
+  > "Glean MCP isn't connected, so I can't run the internal research stream. To enable it: in **Claude Code**, run `claude mcp add glean_default https://<your-company>-be.glean.com/mcp/default --transport http --scope user` and then authenticate with `/mcp`; in **Cowork**, add Glean as a Web connector under Customize → Connectors (your admin may need to provision it). The server must be named exactly `glean_default`. Want me to proceed external-only for now? I'll clearly flag the missing internal context in the brief."
 
 - Compute the company slug as kebab-case of the company name (e.g., "Acme Benefits Inc" → "acme-benefits-inc").
 
