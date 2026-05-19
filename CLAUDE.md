@@ -75,7 +75,13 @@ These reference files are loaded by the skill at runtime, so changes take effect
 
 **The plugin name is the slash command namespace.** Currently `/market-research:run`. Renaming the plugin in `plugin.json` changes every slash invocation; `marketplace.json` must match.
 
-**Deck rendering depends on the host pptx skill.** `skills/strategy-deck` delegates the actual `.pptx` build to `/mnt/skills/public/pptx/SKILL.md` (built into Cowork/Claude Code). For firm-specific branding the right hook is a template `.pptx` under `skills/strategy-deck/assets/`, referenced from `SKILL.md` — don't reimplement pptx generation.
+**Deck rendering has three layered paths.** `skills/strategy-deck` stays renderer-agnostic at the orchestration layer; its `SKILL.md` documents a priority order:
+
+1. `ai-skills-powerpoints:deck-render` (sibling marketplace plugin at https://github.com/mstella-ahead/ai-skills) — provides AHEAD brand spec + pptxgenjs helpers. Both `proposal-deck` (same marketplace) and `strategy-deck` consume it via the **inline-helpers** pattern, so the brand lives in one place.
+2. `/mnt/skills/public/pptx/SKILL.md` — Cowork built-in pptx skill for generic mechanics when `deck-render` isn't installed.
+3. Direct `pptxgenjs` (`npm i pptxgenjs`) or `python-pptx` — local fallback; renders, but without firm branding.
+
+If none are available, the deck step still produces a valid (unbranded) `.pptx`. The plugin keeps zero hard dependencies at the orchestration layer. For per-fork branding without going through `ai-skills-powerpoints`, a template `.pptx` under `skills/strategy-deck/assets/` referenced from `SKILL.md` remains a valid customization hook.
 
 ## Open enhancements (in priority order)
 

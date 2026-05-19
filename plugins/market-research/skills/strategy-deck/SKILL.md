@@ -19,9 +19,13 @@ You MUST read these in order:
 
 1. `references/slide_blueprints.md` — what each of the 19 slides contains, with example titles
 2. `references/scoring_rubric.md` — how to score Impact and AI Readiness, and how to assign waves
-3. `/mnt/skills/public/pptx/SKILL.md` — PowerPoint generation mechanics for this environment
+3. `references/voice.md` — writing rules for the slide content (anti-LLM-tells, bullet style, speaker-notes guidance). Honor this; output that sounds like an AI defeats the proposal.
+4. **Rendering layer** — read the first of these that's available, in priority order:
+   1. **Preferred:** the `deck-render` skill in the `ai-skills-powerpoints` plugin (https://github.com/mstella-ahead/ai-skills). Read `Powerpoints/skills/deck-render/SKILL.md`, its `references/branding.md` (AHEAD brand spec), and `helpers/ahead-pptx.js` (pptxgenjs helpers). Use the **inline-helpers** consumption pattern: copy the `BRAND` constants and helper functions verbatim into your generated `build_deck.js`. `require()` is path-fragile across plugin boundaries. This is the only path that produces a properly AHEAD-branded deck and shares the brand spec with `proposal-deck`.
+   2. **Cowork built-in:** `/mnt/skills/public/pptx/SKILL.md` (with its `pptxgenjs.md` reference) — generic PowerPoint mechanics when `deck-render` isn't installed.
+   3. **Local fallback:** install `pptxgenjs` via `npm i pptxgenjs`, or use `python-pptx` directly. The deck will render but won't carry firm branding.
 
-Don't skip these. The blueprints contain non-obvious framing choices that aren't in the brief.
+Don't skip these. The blueprints contain non-obvious framing choices that aren't in the brief; the voice rules determine whether the output sounds like a senior consultant or an LLM; the rendering layer determines what the deck actually looks like.
 
 ## Step-by-step
 
@@ -64,7 +68,9 @@ Document the anchor selection rationale in `scoring_workings.md`.
 
 ### Step 5: Generate the deck
 
-Follow `references/slide_blueprints.md` to produce each slide. Use the pptx skill mechanics for the actual file generation.
+Follow `references/slide_blueprints.md` to produce each slide. Use whichever rendering layer you identified in "Required reading" above for the actual `.pptx` build.
+
+If you're using `ai-skills-powerpoints:deck-render` (the preferred path), the cleanest pattern is to write a self-contained `build_deck.js` that inlines its `BRAND` constants and helper functions, then run it with `node build_deck.js` to write `proposal.pptx`. Install pptxgenjs first if needed (`npm i pptxgenjs`).
 
 Style rules (don't violate these):
 
@@ -73,6 +79,8 @@ Style rules (don't violate these):
 - **Pair every AI lever in slide 12 with at least one traditional (non-AI) lever.** AI alone isn't enough — process improvements run alongside.
 - **Ground objectives in real numbers** from `scale_metrics` in the brief when available.
 - **Surface conflicts and low-confidence claims somewhere visible** — usually a footnote on slide 11 or an appendix note. Don't bury them.
+- **Apply the voice rules from `references/voice.md`** — no LLM tells, no gerund-opened bullets, conclusion-first bullets. The brief and slide blueprints describe *what* to say; voice.md governs *how* to say it.
+- **Every content slide gets speaker notes** (slides 3, 5–8, 9–13, 15–16, 18) — 2–4 sentences, conversational, what the presenter would actually say; not a script. Dividers (slides 4, 14, 17) and bookends (slides 1, 2, 19) don't need notes.
 
 ### Step 6: Write outputs
 
