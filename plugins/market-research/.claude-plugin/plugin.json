@@ -1,0 +1,20 @@
+{
+  "name": "market-research",
+  "version": "0.1.0",
+  "description": "Run parallel internal (Glean) and external (web) market research on a target company and auto-generate a 19-slide AI strategy proposal deck. Two isolated sub-agents prevent cross-contamination between internal and external findings.",
+  "author": {
+    "name": "Miltos Stella"
+  },
+  "homepage": "https://github.com/mstella-ahead/claude-market-research",
+  "repository": "https://github.com/mstella-ahead/claude-market-research",
+  "license": "MIT",
+  "keywords": [
+    "market-research",
+    "consulting",
+    "glean",
+    "powerpoint",
+    "ai-strategy",
+    "due-diligence",
+    "use-case-identification"
+  ]
+}

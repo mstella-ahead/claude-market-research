@@ -1,0 +1,27 @@
+# Generated run outputs — these contain client research and should NEVER be committed
+runs/
+*.pptx
+*.xlsx
+*.docx
+
+# OS noise
+.DS_Store
+Thumbs.db
+
+# Editor noise
+.vscode/
+.idea/
+*.swp
+*~
+
+# Env files
+.env
+.env.local
+
+# Node (if you ever add tooling)
+node_modules/
+
+# Python (if you ever add tooling)
+__pycache__/
+*.pyc
+.venv/

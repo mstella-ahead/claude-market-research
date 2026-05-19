@@ -1,0 +1,18 @@
+{
+  "name": "market-research",
+  "owner": {
+    "name": "Miltos Stella",
+    "url": "https://github.com/mstella-ahead"
+  },
+  "metadata": {
+    "description": "Plugin marketplace for AI-assisted client research and AI strategy proposal deck generation",
+    "version": "0.1.0"
+  },
+  "plugins": [
+    {
+      "name": "market-research",
+      "source": "./plugins/market-research",
+      "description": "Run parallel internal (Glean) + external (web) research on a target company and auto-generate a 19-slide AI strategy proposal deck. Internal and external research streams are isolated to avoid anchoring bias."
+    }
+  ]
+}
