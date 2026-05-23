@@ -45,6 +45,15 @@ Use parallel WebSearch calls when queries are independent. Use WebFetch to read 
 
 ## Output
 
+You write **two files** to `./runs/<company-slug>/`:
+
+1. `external_report.md` — the markdown report (consumed by the consolidator)
+2. `external_report.json` — a structured JSON twin conforming to `bench/schema.json` at the repo root (consumed by tooling and benchmarks)
+
+Both files contain the **same findings** — same facts, same citations, same level of detail. They are two views of one report. Write the markdown first, then mechanically convert it to JSON. If a fact appears in the markdown, it must appear in the JSON with the same citation; if it doesn't appear in the markdown, it must not appear in the JSON.
+
+### Markdown output
+
 Write your report to `./runs/<company-slug>/external_report.md` using exactly this schema:
 
 ```markdown
@@ -85,6 +94,19 @@ Researcher: external (web-only)
 ## Open questions for the consolidator
 - Things the public web couldn't answer that the internal report might
 ```
+
+### JSON output
+
+After the markdown is written, produce `./runs/<company-slug>/external_report.json` conforming to `bench/schema.json` at the repo root.
+
+1. **Read `bench/schema.json` before writing the JSON.** It is the authoritative contract — field names, enums, and required arrays are enforced.
+2. **One canonical citations array.** Every URL you cited in the markdown becomes one entry in the top-level `citations` array, in the order it first appears. Every fact-bearing field then references citations by 0-based index via `citation_indices` (or `citation_index` for the single-pointer case in `representative_quotes`).
+3. **Self-tag each citation honestly.** `source_type` must be one of `primary` (the company itself, regulator, court filing), `secondary` (reputable journalism, analyst report), or `aggregator` (listicle, Wikipedia, content farm). When in doubt, mark it `aggregator` — a downstream judge spot-checks this and over-claiming `primary` hurts the report.
+4. **`generated_at`** is the ISO 8601 timestamp when you finish; **`researcher`** is `"claude-external-researcher"`.
+5. **Use the literal string `"not_disclosed"`** in `scale_snapshot` `value` fields when a figure is genuinely unavailable. Do not guess a number.
+6. **Validate before finishing.** After writing, run `python3 -c "import json,sys; json.load(open('./runs/<slug>/external_report.json'))"` (or equivalent) to confirm the file parses. If you want stricter validation and `jsonschema` is available, use it; otherwise rely on the schema's `additionalProperties: false` to catch typos when downstream code validates.
+
+The JSON is purely additive — the consolidator continues reading the markdown. Do not break the markdown to make the JSON tidier.
 
 ## Common failure modes to avoid
 
