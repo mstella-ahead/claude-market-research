@@ -120,6 +120,18 @@ def run_claude(company: str, slug: str, run_dir: Path, pricing: dict[str, Any]) 
         "--dangerously-skip-permissions",  # non-interactive: sub-agents need tool calls auto-approved
     ]
 
+    # Scrub Anthropic auth vars from `claude -p`'s env. The harness loads
+    # .env into os.environ so the judge's anthropic SDK can authenticate,
+    # but `claude -p` is its own CLI signed into the user's Claude account
+    # via OAuth. If it sees ANTHROPIC_API_KEY in its env it uses that key
+    # instead — which is the API console key, not the OAuth credential —
+    # and 401s.
+    claude_env = {
+        k: v
+        for k, v in os.environ.items()
+        if k not in {"ANTHROPIC_API_KEY", "CLAUDE_API_KEY", "ANTHROPIC_AUTH_TOKEN"}
+    }
+
     start = time.monotonic()
     try:
         completed = subprocess.run(
@@ -129,6 +141,7 @@ def run_claude(company: str, slug: str, run_dir: Path, pricing: dict[str, Any]) 
             text=True,
             timeout=60 * 60,  # 1 hour ceiling
             check=False,
+            env=claude_env,
         )
     except FileNotFoundError as e:
         wall = time.monotonic() - start
