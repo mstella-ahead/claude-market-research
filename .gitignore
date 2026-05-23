@@ -4,6 +4,9 @@ runs/
 *.xlsx
 *.docx
 
+# Benchmark outputs — same reason. Raw provider research lives here.
+bench/results/
+
 # OS noise
 .DS_Store
 Thumbs.db

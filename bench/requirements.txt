@@ -1,0 +1,8 @@
+# Benchmark-only dependencies. Not used by the production plugin.
+# Install in a venv:  python3 -m venv .venv && source .venv/bin/activate && pip install -r bench/requirements.txt
+
+anthropic>=0.40.0
+parallel-web>=0.6.0
+python-dotenv>=1.0.0
+pyyaml>=6.0
+jsonschema>=4.20.0
