@@ -1,0 +1,394 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/mstella-ahead/claude-market-research/bench/schema.json",
+  "title": "ExternalResearchReport",
+  "description": "Structured outside-in research report on a target company. Canonical contract used by both the Claude external-researcher sub-agent and the Parallel.ai Task API (Deep Research). Designed to be the JSON analog of the markdown report at runs/<slug>/external_report.md.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "company",
+    "company_slug",
+    "generated_at",
+    "researcher",
+    "tldr",
+    "company_basics",
+    "scale_snapshot",
+    "operating_model_signals",
+    "tech_stack_signals",
+    "recent_strategic_moves",
+    "public_pain_points",
+    "competitive_landscape",
+    "open_questions",
+    "citations"
+  ],
+  "properties": {
+    "company": {
+      "type": "string",
+      "description": "Canonical company name as researched (e.g., 'American Electric Power Company, Inc.')."
+    },
+    "company_slug": {
+      "type": "string",
+      "description": "Kebab-case slug used for output paths (e.g., 'american-electric-power').",
+      "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$"
+    },
+    "generated_at": {
+      "type": "string",
+      "description": "ISO 8601 timestamp when the report was generated.",
+      "format": "date-time"
+    },
+    "researcher": {
+      "type": "string",
+      "description": "Identifier of the producing researcher (e.g., 'claude-external-researcher' or 'parallel-task-pro').",
+      "enum": ["claude-external-researcher", "parallel-task-pro", "parallel-task-ultra", "other"]
+    },
+
+    "tldr": {
+      "type": "array",
+      "description": "3-5 single-sentence bullets capturing the most important outside-in findings.",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["bullet", "citation_indices"],
+        "properties": {
+          "bullet": { "type": "string" },
+          "citation_indices": {
+            "type": "array",
+            "items": { "type": "integer", "minimum": 0 }
+          }
+        }
+      }
+    },
+
+    "company_basics": {
+      "type": "object",
+      "description": "What the company does, its segments, and its business model.",
+      "additionalProperties": false,
+      "required": ["summary", "products_services", "customer_segments", "business_model"],
+      "properties": {
+        "summary": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["text", "citation_indices"],
+          "properties": {
+            "text": {
+              "type": "string",
+              "description": "2-4 sentence outside-in summary suitable for a deck context slide."
+            },
+            "citation_indices": {
+              "type": "array",
+              "items": { "type": "integer", "minimum": 0 }
+            }
+          }
+        },
+        "products_services": {
+          "type": "array",
+          "description": "Major product/service lines or business segments.",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["name", "description", "citation_indices"],
+            "properties": {
+              "name": { "type": "string" },
+              "description": { "type": "string" },
+              "citation_indices": {
+                "type": "array",
+                "items": { "type": "integer", "minimum": 0 }
+              }
+            }
+          }
+        },
+        "customer_segments": {
+          "type": "array",
+          "description": "Who the company serves (e.g., 'residential ratepayers', 'large industrial customers', 'commercial PBMs').",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["segment", "citation_indices"],
+            "properties": {
+              "segment": { "type": "string" },
+              "citation_indices": {
+                "type": "array",
+                "items": { "type": "integer", "minimum": 0 }
+              }
+            }
+          }
+        },
+        "business_model": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["text", "citation_indices"],
+          "properties": {
+            "text": {
+              "type": "string",
+              "description": "How the company makes money (e.g., 'regulated rate base + transmission ROE', 'capitated dialysis services')."
+            },
+            "citation_indices": {
+              "type": "array",
+              "items": { "type": "integer", "minimum": 0 }
+            }
+          }
+        }
+      }
+    },
+
+    "scale_snapshot": {
+      "type": "object",
+      "description": "Quantitative scale. Use 'not_disclosed' for value when genuinely unavailable rather than guessing.",
+      "additionalProperties": false,
+      "required": ["revenue", "employees", "customers", "geography"],
+      "properties": {
+        "revenue": { "$ref": "#/$defs/scaleFact" },
+        "employees": { "$ref": "#/$defs/scaleFact" },
+        "customers": { "$ref": "#/$defs/scaleFact" },
+        "geography": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["value", "confidence", "citation_indices"],
+          "properties": {
+            "value": {
+              "type": "string",
+              "description": "Free-text description of geographic footprint (e.g., '11-state US service territory: OH, IN, KY, MI, OK, TN, TX, VA, WV, AR, LA')."
+            },
+            "confidence": { "$ref": "#/$defs/confidence" },
+            "citation_indices": {
+              "type": "array",
+              "items": { "type": "integer", "minimum": 0 }
+            }
+          }
+        }
+      }
+    },
+
+    "operating_model_signals": {
+      "type": "array",
+      "description": "Functions/processes/org structure inferable from public sources. Each entry attributes the signal to specific evidence (job posts, press, conference talks, podcasts).",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["function", "signal", "evidence_type", "confidence", "citation_indices"],
+        "properties": {
+          "function": {
+            "type": "string",
+            "description": "Functional area (e.g., 'Grid Operations', 'Customer Care', 'Engineering / Software')."
+          },
+          "signal": {
+            "type": "string",
+            "description": "What the public evidence tells us about how this function operates."
+          },
+          "evidence_type": {
+            "type": "string",
+            "enum": ["job_post", "press", "investor_day", "conference_talk", "podcast", "blog", "regulatory_filing", "linkedin", "other"]
+          },
+          "confidence": { "$ref": "#/$defs/confidence" },
+          "citation_indices": {
+            "type": "array",
+            "items": { "type": "integer", "minimum": 0 }
+          }
+        }
+      }
+    },
+
+    "tech_stack_signals": {
+      "type": "array",
+      "description": "Named systems and vendors with source attribution. Look at case studies, RFPs, job descriptions, GitHub orgs, BuiltWith.",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["system", "category", "evidence_type", "confidence", "citation_indices"],
+        "properties": {
+          "system": {
+            "type": "string",
+            "description": "Vendor or product name (e.g., 'Salesforce Service Cloud', 'SAP S/4HANA', 'Snowflake')."
+          },
+          "category": {
+            "type": "string",
+            "description": "Functional category (e.g., 'CRM', 'ERP', 'Data Warehouse', 'OMS', 'GIS', 'CIS')."
+          },
+          "evidence_type": {
+            "type": "string",
+            "enum": ["case_study", "press_release", "job_post", "rfp", "github", "builtwith", "investor_doc", "other"]
+          },
+          "confidence": { "$ref": "#/$defs/confidence" },
+          "citation_indices": {
+            "type": "array",
+            "items": { "type": "integer", "minimum": 0 }
+          }
+        }
+      }
+    },
+
+    "recent_strategic_moves": {
+      "type": "array",
+      "description": "Strategic announcements, M&A, leadership changes, public initiatives in the last 12-18 months.",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["date", "event", "category", "citation_indices"],
+        "properties": {
+          "date": {
+            "type": "string",
+            "description": "Date the move was announced. YYYY-MM-DD if known; YYYY-MM if only month is known; YYYY if only year."
+          },
+          "event": {
+            "type": "string",
+            "description": "1-2 sentence description of the move."
+          },
+          "category": {
+            "type": "string",
+            "enum": ["m&a", "leadership", "product", "partnership", "regulatory", "capital", "strategy", "other"]
+          },
+          "citation_indices": {
+            "type": "array",
+            "items": { "type": "integer", "minimum": 0 }
+          }
+        }
+      }
+    },
+
+    "public_pain_points": {
+      "type": "array",
+      "description": "Themes from Glassdoor, Trustpilot, Reddit, app stores, regulatory actions, customer complaints. Patterns require multiple independent sources — flag prevalence honestly.",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["theme", "source_pattern", "prevalence", "representative_quotes", "citation_indices"],
+        "properties": {
+          "theme": {
+            "type": "string",
+            "description": "The pain point in 1 phrase (e.g., 'long claims-resolution turnaround', 'storm-response communication gaps')."
+          },
+          "source_pattern": {
+            "type": "string",
+            "description": "Where the signal shows up (e.g., 'recurring Glassdoor reviews from CSRs', 'state PUC complaints', 'app-store reviews 1-star bucket')."
+          },
+          "prevalence": {
+            "type": "string",
+            "enum": ["isolated", "recurring", "widespread"],
+            "description": "Honest read: 'isolated' = a few mentions, 'recurring' = consistent theme across 5+ sources, 'widespread' = dominant theme in the source pool."
+          },
+          "representative_quotes": {
+            "type": "array",
+            "description": "1-3 representative quotes or excerpts that capture the theme.",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["quote", "citation_index"],
+              "properties": {
+                "quote": { "type": "string" },
+                "citation_index": { "type": "integer", "minimum": 0 }
+              }
+            }
+          },
+          "citation_indices": {
+            "type": "array",
+            "items": { "type": "integer", "minimum": 0 }
+          }
+        }
+      }
+    },
+
+    "competitive_landscape": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["direct_competitors", "adjacent_threats"],
+      "properties": {
+        "direct_competitors": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/competitor" }
+        },
+        "adjacent_threats": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/competitor" }
+        }
+      }
+    },
+
+    "open_questions": {
+      "type": "array",
+      "description": "Things the public web couldn't answer that the internal report (or human follow-up) might. Plain strings — no citations expected.",
+      "items": { "type": "string" }
+    },
+
+    "citations": {
+      "type": "array",
+      "description": "All sources referenced by citation_indices anywhere in the document. Order is significant: indices are 0-based positions into this array.",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "title", "url", "publisher", "source_type", "date_accessed"],
+        "properties": {
+          "id": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "0-based index that matches position in this array. Redundant with array position but kept explicit for downstream consumers and human review."
+          },
+          "title": { "type": "string" },
+          "url": {
+            "type": "string",
+            "format": "uri"
+          },
+          "publisher": {
+            "type": "string",
+            "description": "Publishing entity (e.g., 'Reuters', 'SEC EDGAR', 'company website', 'Glassdoor', 'Indeed')."
+          },
+          "source_type": {
+            "type": "string",
+            "enum": ["primary", "secondary", "aggregator"],
+            "description": "primary = company itself or regulator/court; secondary = reputable journalism / analyst report; aggregator = listicle, Wikipedia, content farm. Used by the judge to score citation quality."
+          },
+          "source_date": {
+            "type": "string",
+            "description": "When the underlying content was published (YYYY-MM-DD or YYYY-MM or YYYY). Empty string if unknown."
+          },
+          "date_accessed": {
+            "type": "string",
+            "description": "When the researcher retrieved the source (YYYY-MM-DD)."
+          }
+        }
+      }
+    }
+  },
+
+  "$defs": {
+    "confidence": {
+      "type": "string",
+      "enum": ["high", "medium", "low"]
+    },
+    "scaleFact": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["value", "year", "confidence", "citation_indices"],
+      "properties": {
+        "value": {
+          "type": "string",
+          "description": "Value with units (e.g., '$19.7B', '~17,300', '5.6M'). Use the literal string 'not_disclosed' if genuinely unavailable rather than guessing."
+        },
+        "year": {
+          "type": "string",
+          "description": "Year the value applies to (e.g., '2024'). Empty string if not applicable."
+        },
+        "confidence": { "$ref": "#/$defs/confidence" },
+        "citation_indices": {
+          "type": "array",
+          "items": { "type": "integer", "minimum": 0 }
+        }
+      }
+    },
+    "competitor": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "rationale", "citation_indices"],
+      "properties": {
+        "name": { "type": "string" },
+        "rationale": {
+          "type": "string",
+          "description": "1-2 sentences on why they compete (overlap in product, geography, or customer)."
+        },
+        "citation_indices": {
+          "type": "array",
+          "items": { "type": "integer", "minimum": 0 }
+        }
+      }
+    }
+  }
+}
