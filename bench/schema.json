@@ -28,13 +28,11 @@
     },
     "company_slug": {
       "type": "string",
-      "description": "Kebab-case slug used for output paths (e.g., 'american-electric-power').",
-      "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$"
+      "description": "Kebab-case slug used for output paths, matching ^[a-z0-9]+(-[a-z0-9]+)*$ (e.g., 'american-electric-power'). Constraint enforced by the description rather than a JSON Schema 'pattern' keyword because Parallel.ai's Task API output_schema does not support 'pattern'."
     },
     "generated_at": {
       "type": "string",
-      "description": "ISO 8601 timestamp when the report was generated.",
-      "format": "date-time"
+      "description": "ISO 8601 timestamp when the report was generated (e.g., '2026-05-22T15:30:00Z'). Constraint enforced by the description rather than a JSON Schema 'format' keyword because Parallel.ai's Task API output_schema does not support 'format'."
     },
     "researcher": {
       "type": "string",
@@ -326,7 +324,7 @@
           "title": { "type": "string" },
           "url": {
             "type": "string",
-            "format": "uri"
+            "description": "Full URL of the source (http:// or https://). Constraint enforced by the description rather than 'format' because Parallel.ai's Task API output_schema does not support the 'format' keyword."
           },
           "publisher": {
             "type": "string",
