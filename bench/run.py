@@ -815,22 +815,75 @@ def summary_rollup() -> None:
 # ---------------------------------------------------------------------------
 
 
+def judge_only(run_dir: Path) -> int:
+    """Re-run the blind judge on an existing run dir without re-invoking either
+    provider. Useful when the judge step failed (e.g., bad API key) but the
+    provider outputs are intact."""
+
+    if not run_dir.exists() or not (run_dir / "metrics.json").exists():
+        print(f"error: {run_dir} is not a valid run dir (missing metrics.json)", file=sys.stderr)
+        return 2
+
+    metrics = json.loads((run_dir / "metrics.json").read_text())
+    company = metrics.get("company_slug", run_dir.name).replace("-", " ").title()
+    claude_md = run_dir / "claude_output.md"
+    claude_json = run_dir / "claude_output.json"
+    parallel_md = run_dir / "parallel_output.md"
+    parallel_json = run_dir / "parallel_output.json"
+
+    missing = [p for p in (claude_md, claude_json, parallel_md, parallel_json) if not p.exists()]
+    if missing:
+        print(f"error: required output files missing: {missing}", file=sys.stderr)
+        return 2
+
+    sys.path.insert(0, str(BENCH_DIR))
+    from judge import judge_outputs  # noqa: E402
+
+    print(f"[bench] re-running judge on {run_dir.relative_to(REPO_ROOT)}")
+    judge_scores = judge_outputs(
+        claude_md_path=claude_md,
+        claude_json_path=claude_json,
+        parallel_md_path=parallel_md,
+        parallel_json_path=parallel_json,
+        run_dir=run_dir,
+        company=company,
+    )
+
+    # Rebuild comparison.md from existing metrics + new judge scores.
+    from dataclasses import fields as _fields
+    claude_r = ProviderResult(**{k: metrics["claude"].get(k) for k in (f.name for f in _fields(ProviderResult)) if k in metrics["claude"]})
+    parallel_r = ProviderResult(**{k: metrics["parallel"].get(k) for k in (f.name for f in _fields(ProviderResult)) if k in metrics["parallel"]})
+    comparison_path = generate_comparison_md(run_dir, company, claude_r, parallel_r, judge_scores)
+    print(f"[bench] wrote {comparison_path.relative_to(REPO_ROOT)}")
+
+    # Clear judge_error.txt if it exists from a prior failed attempt.
+    err_path = run_dir / "judge_error.txt"
+    if err_path.exists():
+        err_path.unlink()
+
+    return 0
+
+
 def main() -> int:
     load_dotenv(REPO_ROOT / ".env")
 
     p = argparse.ArgumentParser()
     p.add_argument("--company", help="Canonical company name to research")
     p.add_argument("--summary", action="store_true", help="Roll up all prior runs into a summary markdown file")
+    p.add_argument("--judge-only", help="Path to an existing run dir; re-run only the judge step on it")
     args = p.parse_args()
 
     RESULTS_DIR.mkdir(parents=True, exist_ok=True)
+
+    if args.judge_only:
+        return judge_only(Path(args.judge_only).resolve())
 
     if args.summary:
         summary_rollup()
         return 0
 
     if not args.company:
-        print("error: --company is required (or pass --summary)", file=sys.stderr)
+        print("error: --company is required (or pass --summary or --judge-only)", file=sys.stderr)
         return 2
 
     # Make bench/ importable for the judge module.
