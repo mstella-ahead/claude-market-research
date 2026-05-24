@@ -53,18 +53,16 @@ USER_PROMPT_TEMPLATE = """Company: {company}
 
 Below are two outside-in research dossiers produced by different systems. Both target the same JSON schema. Each is presented as: (1) a markdown render, then (2) the raw JSON.
 
+The two outputs are presented to you blind: you do not know which system produced A and which produced B, and obvious provenance markers (`researcher`, `generated_at`, and the markdown header equivalents) have been redacted. Score on substance, not on stylistic tells.
+
+Set `mapping` in your output to `{{"A": "unknown", "B": "unknown"}}` — the harness will overwrite it with the real de-anonymisation when persisting your scores.
+
 Score them blind per the rubric. Spot-check `citations.source_type` against URL patterns and report any over-claims.
 
 Return a single JSON object conforming to this schema:
 
 ```json
 {judge_schema}
-```
-
-The `mapping` field is provided to you below (do NOT alter it — copy it through verbatim into your output so the run is auditable):
-
-```json
-{mapping}
 ```
 
 ================================================================================
@@ -107,6 +105,30 @@ def _load_text(path: Path, cap: int = 200_000) -> str:
     return text
 
 
+def _redact_provenance(md_text: str, json_text: str) -> tuple[str, str]:
+    """Strip the obvious provenance markers that would let the judge de-anonymise
+    A vs B without doing any real evaluation: the `researcher` and `generated_at`
+    fields in JSON, and the corresponding `Generated:` / `Researcher:` lines in
+    markdown."""
+    try:
+        obj = json.loads(json_text)
+        if isinstance(obj, dict):
+            if "researcher" in obj:
+                obj["researcher"] = "<redacted>"
+            if "generated_at" in obj:
+                obj["generated_at"] = "<redacted>"
+        json_redacted = json.dumps(obj, indent=2, ensure_ascii=False)
+    except json.JSONDecodeError:
+        json_redacted = json_text
+
+    md_filtered_lines = [
+        line
+        for line in md_text.splitlines()
+        if not line.startswith("Generated:") and not line.startswith("Researcher:")
+    ]
+    return "\n".join(md_filtered_lines), json_redacted
+
+
 def judge_outputs(
     *,
     claude_md_path: Path,
@@ -140,17 +162,23 @@ def judge_outputs(
 
     mapping = {"A": a_provider, "B": b_provider}
 
-    a_md = _load_text(a_md_path)
-    a_json = _load_text(a_json_path)
-    b_md = _load_text(b_md_path)
-    b_json = _load_text(b_json_path)
+    a_md_raw = _load_text(a_md_path)
+    a_json_raw = _load_text(a_json_path)
+    b_md_raw = _load_text(b_md_path)
+    b_json_raw = _load_text(b_json_path)
+
+    # Redact obvious provenance markers (researcher, generated_at, the markdown
+    # header equivalents) so the judge can't trivially de-anonymise A vs B by
+    # reading them. The harness keeps the real mapping and re-attaches it after
+    # the judge returns.
+    a_md, a_json = _redact_provenance(a_md_raw, a_json_raw)
+    b_md, b_json = _redact_provenance(b_md_raw, b_json_raw)
 
     judge_schema = json.loads(JUDGE_SCHEMA_PATH.read_text())
 
     user_prompt = USER_PROMPT_TEMPLATE.format(
         company=company,
         judge_schema=json.dumps(judge_schema, indent=2),
-        mapping=json.dumps(mapping),
         a_md=a_md,
         a_json=a_json,
         b_md=b_md,

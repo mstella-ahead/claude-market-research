@@ -280,7 +280,10 @@ PARALLEL_INPUT_TEMPLATE = (
     "a primary or reputable secondary source. For the citations array, mark each "
     "source's source_type honestly: primary = company itself or regulator/court; "
     "secondary = reputable journalism or analyst report; aggregator = listicle, "
-    "Wikipedia, or content farm."
+    "Wikipedia, or content farm. "
+    "In the output, set the `researcher` field to exactly 'parallel-task-pro' "
+    "(this identifies which system produced the dossier; do not copy any other "
+    "researcher identifier you may see in the schema's examples)."
 )
 
 
