@@ -1,0 +1,37 @@
+# Test set for the Claude-vs-Parallel external-research benchmark.
+# Three companies: two regulated electric utilities (AEP, WEC — same sector for
+# direct comparability, WEC has user ground-truth from prior runs) and one
+# out-of-sector control (DaVita — kidney dialysis services).
+#
+# Keys are short labels used in result paths; values include the canonical name
+# the harness passes to both providers verbatim.
+
+companies:
+  - key: aep
+    name: "American Electric Power"
+    slug: american-electric-power
+    sector: regulated-electric-utility
+    ticker: AEP
+    notes: |
+      Live $250K AHEAD pursuit. User has an existing AEP proposal draft to
+      ground-truth against. NASDAQ-listed.
+
+  - key: wec
+    name: "WEC Energy Group"
+    slug: wec-energy-group
+    sector: regulated-electric-utility
+    ticker: WEC
+    notes: |
+      Same sector as AEP, so direct apples-to-apples on operating-model
+      signals and tech-stack patterns is possible. User has past runs to
+      ground-truth against.
+
+  - key: davita
+    name: "DaVita Inc"
+    slug: davita-inc
+    sector: kidney-dialysis-services
+    ticker: DVA
+    notes: |
+      Out-of-sector control. Healthcare-services business with very
+      different operating model from the two utilities; tests whether
+      either provider over-fits to utility-style queries.

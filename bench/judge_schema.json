@@ -1,0 +1,118 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/mstella-ahead/claude-market-research/bench/judge_schema.json",
+  "title": "JudgeScores",
+  "description": "Output schema for the blind LLM judge. The judge sees two outputs labelled A and B (random assignment) and scores each against a 5-criterion rubric. The mapping field de-anonymises A/B back to the provider names for human review.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["per_output_scores", "verdict", "verdict_reasoning", "close_calls", "mapping"],
+  "properties": {
+    "per_output_scores": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["A", "B"],
+      "properties": {
+        "A": { "$ref": "#/$defs/outputScores" },
+        "B": { "$ref": "#/$defs/outputScores" }
+      }
+    },
+    "verdict": {
+      "type": "string",
+      "enum": ["A_better", "B_better", "tie"],
+      "description": "Overall judgment after weighing all five criteria together. 'tie' is allowed and expected when scores are within 1 point across most criteria."
+    },
+    "verdict_reasoning": {
+      "type": "string",
+      "description": "2-4 sentences explaining the overall verdict. Reference specific criteria and quote evidence."
+    },
+    "close_calls": {
+      "type": "array",
+      "description": "List of criterion names where the two outputs were within 1 point. These are surfaced for human spot-checking.",
+      "items": {
+        "type": "string",
+        "enum": ["factual_accuracy", "citation_quality", "coverage_breadth", "recency", "structural_fidelity"]
+      }
+    },
+    "mapping": {
+      "type": "object",
+      "description": "De-anonymisation: which provider's output was shown as A and which as B.",
+      "additionalProperties": false,
+      "required": ["A", "B"],
+      "properties": {
+        "A": { "type": "string", "enum": ["claude", "parallel"] },
+        "B": { "type": "string", "enum": ["claude", "parallel"] }
+      }
+    },
+    "source_type_audit": {
+      "type": "object",
+      "description": "URL-pattern spot-check of citations.source_type. The judge does not trust the provider's self-tag; it independently classifies a sample of citations and reports mismatches. Used to refine the citation_quality score.",
+      "additionalProperties": false,
+      "properties": {
+        "A": { "$ref": "#/$defs/sourceTypeAudit" },
+        "B": { "$ref": "#/$defs/sourceTypeAudit" }
+      }
+    }
+  },
+
+  "$defs": {
+    "criterionScore": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["score", "reasoning"],
+      "properties": {
+        "score": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 5,
+          "description": "1 = poor, 2 = below average, 3 = adequate, 4 = good, 5 = excellent."
+        },
+        "reasoning": {
+          "type": "string",
+          "description": "2-3 sentences with specific evidence (quote a field path or citation index)."
+        }
+      }
+    },
+    "outputScores": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["factual_accuracy", "citation_quality", "coverage_breadth", "recency", "structural_fidelity"],
+      "properties": {
+        "factual_accuracy": { "$ref": "#/$defs/criterionScore" },
+        "citation_quality": { "$ref": "#/$defs/criterionScore" },
+        "coverage_breadth": { "$ref": "#/$defs/criterionScore" },
+        "recency": { "$ref": "#/$defs/criterionScore" },
+        "structural_fidelity": { "$ref": "#/$defs/criterionScore" }
+      }
+    },
+    "sourceTypeAudit": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["citations_sampled", "mismatches"],
+      "properties": {
+        "citations_sampled": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "How many citations the judge independently classified."
+        },
+        "mismatches": {
+          "type": "array",
+          "description": "Citations where the judge's URL-pattern classification disagreed with the provider's self-tag. An over-claim of 'primary' on an aggregator URL is the dominant failure mode to catch.",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["citation_index", "claimed", "judged", "url_pattern_evidence"],
+            "properties": {
+              "citation_index": { "type": "integer", "minimum": 0 },
+              "claimed": { "type": "string", "enum": ["primary", "secondary", "aggregator"] },
+              "judged": { "type": "string", "enum": ["primary", "secondary", "aggregator"] },
+              "url_pattern_evidence": {
+                "type": "string",
+                "description": "Short note on which URL pattern led the judge to disagree (e.g., 'wikipedia.org → aggregator, not primary'; 'reuters.com → secondary, not primary')."
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

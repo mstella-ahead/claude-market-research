@@ -1,0 +1,28 @@
+{
+  "_meta": {
+    "fetched_on": "2026-05-22",
+    "anthropic_pricing_source": "https://platform.claude.com/docs/en/about-claude/pricing",
+    "parallel_pricing_source": "https://docs.parallel.ai/getting-started/pricing",
+    "notes": [
+      "Anthropic prices below are for Claude Opus 4.7 (the model the external-researcher sub-agent runs under).",
+      "Web search via the Anthropic API is metered separately at $10 / 1000 searches. Web fetch is free.",
+      "If `claude -p --output-format json` does not surface sub-agent token counts cleanly, the harness records what it can and notes the gap in bench/README.md."
+    ]
+  },
+
+  "claude_opus_4_7": {
+    "input_per_mtok_usd": 5.00,
+    "output_per_mtok_usd": 25.00,
+    "cache_write_5m_per_mtok_usd": 6.25,
+    "cache_write_1h_per_mtok_usd": 10.00,
+    "cache_read_per_mtok_usd": 0.50,
+    "web_search_per_1k_searches_usd": 10.00,
+    "web_fetch_per_call_usd": 0.00
+  },
+
+  "parallel_task": {
+    "pro_per_task_run_usd": 0.10,
+    "ultra_per_task_run_usd": 0.30,
+    "_pricing_unit": "Pricing is per Task Run, not per output field. No per-token or per-source surcharges."
+  }
+}

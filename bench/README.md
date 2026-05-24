@@ -31,9 +31,11 @@ Outputs land in `bench/results/<company>-<ISO_timestamp>/` with:
 - `judge_scores.json` (blind A/B scores, verdict, de-anon mapping)
 - `comparison.md` (side-by-side human-readable summary, close-calls flagged)
 
-## How to run
+### Expectations
 
-> Phase 4+ — these instructions are stubs until the harness lands.
+Budget **~$2.21 (Claude) + $0.10 (Parallel) per company-run**; **~7 min wall time per provider** (Claude ~6.4 min mean, Parallel pro ~8.1 min mean). A full 3-company sweep is therefore ~$7 and ~45 min wall-clock end-to-end (serial). Numbers derived from the 2026-05-24 runs recorded in `bench/results/`.
+
+## How to run
 
 ```bash
 # 1. Install dependencies (the harness is local-only — no need to add to plugin)
@@ -51,9 +53,19 @@ python bench/run.py --company "American Electric Power"
 python bench/run.py --company "WEC Energy Group"
 python bench/run.py --company "DaVita"
 
-# 5. Roll-up across runs
+# 5. Re-judge an existing run dir without re-invoking either provider
+#    (use when the judge step failed but provider outputs are intact)
+python bench/run.py --judge-only bench/results/<slug>-<timestamp>
+
+# 6. Roll-up across runs
 python bench/run.py --summary
 ```
+
+## Gotchas
+
+- **`claude -p` env-key precedence.** The harness scrubs `ANTHROPIC_API_KEY` (plus `CLAUDE_API_KEY` and `ANTHROPIC_AUTH_TOKEN`) from the subprocess env before spawning `claude -p` (commit `ded6def`). Reason: `claude -p` prefers an env-var API key over its OAuth login, and the `.env` file holds a console-issued API key that's a different account from the user's interactive OAuth — leaving it set causes an immediate 401 (`invalid x-api-key`). The judge still sees the key in `os.environ` so its direct SDK call works.
+- **Top-level Claude token counts under-report.** `claude -p --output-format json` returns the parent session's tokens (a few hundred), not the spawned sub-agent's. `total_cost_usd` is correct; per-token attribution isn't. Treat the cost field as the load-bearing number.
+- **Parallel's JSON Schema subset.** No `pattern` or `format` keywords on `output_schema`; encode constraints in field descriptions instead. The shared `schema.json` is already compliant.
 
 ## Test set
 
@@ -66,6 +78,12 @@ See [`companies.yaml`](./companies.yaml). Three companies chosen to give one gro
 ## Hard rules
 
 - **Same schema, both sides.** `schema.json` is the canonical contract. Neither implementation gets a custom schema. If a field is hard for one provider to populate, it stays in the schema — that *is* the signal we're measuring.
-- **Blind judge.** The judge sees Output A / Output B with random assignment. The de-anon mapping is in `judge_scores.json` so a human can audit.
+- **Blind judge as of commit `a4e6ee7`.** The judge sees Output A / Output B with random assignment, and provenance markers (`researcher`, `generated_at`, the matching markdown header lines) are redacted before the prompt is built. The first-batch runs (2026-05-24) had partial provenance leaks fixed in that commit — see CLAUDE.md "Past experiments" for the caveat. The de-anon mapping is in `judge_scores.json` so a human can audit.
 - **No silent reconciliation.** When the judge can't separate them, that's a "close call" — the bench surfaces it for human review rather than picking a winner.
 - **Production code unchanged.** PR #1 (on `main`) makes the Claude external-researcher dual-write markdown + JSON. The consolidator continues reading markdown — the JSON path is purely additive.
+
+## See also
+
+- [`CLAUDE.md` → "Past experiments"](../CLAUDE.md#past-experiments) for the recorded verdict and the recommendation that came out of this benchmark.
+- [`bench/results/summary-20260524T182733Z.md`](./results/summary-20260524T182733Z.md) for the rolled-up 3-company scores.
+- Per-company artifacts under `bench/results/<slug>-<timestamp>/`: `comparison.md`, `judge_scores.json`, `metrics.json`, plus both providers' `.md` / `.json` outputs and Parallel's `parallel_basis.json`.
