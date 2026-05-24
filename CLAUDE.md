@@ -123,3 +123,7 @@ The honest test isn't "did it produce a deck" — it's "would I send this deck."
 **Side benefit:** the benchmark surfaced a citation-discipline issue in the production external-researcher; fixed in the citation-discipline patch landed on main alongside this addendum.
 
 **Reference materials:** the benchmark harness lives on the `feat/parallel-benchmark` branch with results in `bench/results/`. Branch is reference-only — do not merge. Don't re-run this experiment without (a) a different sample (different industries, n ≥ 5) and (b) a specific question the existing data can't answer.
+
+## Open questions
+
+**Judge-blinding chronology.** During the May 2026 benchmark, the blind-judge fix landed in commit `a4e6ee7`. At closeout, the assistant's session memory suggested the recorded `judge_scores.json` files may actually have been produced *after* that fix — meaning the existing caveats in PR #1's description, this CLAUDE.md's "Past experiments" entry, and `bench/report.html` may slightly understate the methodology's rigor. Conservative wording was kept across all three artifacts for consistency. To resolve: a future session can compare the git log timestamp for `a4e6ee7` against the file mtimes on the three `judge_scores.json` files. If the runs were genuinely post-fix, update all three artifacts together — don't update one in isolation.
