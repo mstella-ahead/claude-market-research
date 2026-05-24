@@ -108,3 +108,17 @@ The honest test isn't "did it produce a deck" — it's "would I send this deck."
 - **No hardcoded .pptx template** — branding is firm-specific; left as a customization point under `skills/strategy-deck/assets/`.
 - **No formal evals/test set** — useful for v0.2 once 3+ real example runs exist to evaluate against. Premature before then.
 - **No third research thread** — a "third source" (SEC filings, court records, etc.) is tempting but each new thread compounds reconciliation complexity quadratically. Stay with two threads until the consolidator is reliably good on two.
+
+## Past experiments
+
+**Parallel.ai vs Claude for external research (May 2026, n=3).** Tested on AEP, WEC, and DaVita using a blind Opus 4.7 judge on a 5-criterion rubric (factual_accuracy, citation_quality, coverage_breadth, recency, structural_fidelity).
+
+- **Quality verdict: Claude wins all three head-to-head.** Decisive criteria were coverage_breadth (+1.34 vs Parallel) and citation_quality (+1.00). Claude consistently found entity-level facts Parallel missed (Bloom Energy deal in AEP, Berkshire 45% cap and Mozarc JV in DaVita, primary-source grounding via SEC and DOJ filings in WEC).
+- **Cost verdict: Parallel is 22× cheaper.** Claude ~$2.21/run pay-per-token vs Parallel $0.10/run flat fee on `pro` processor.
+- **Latency: tied.** Claude 1.27× faster mean wall-clock (~6.4 vs ~8.1 min), not a meaningful differentiator.
+
+**Conclusion:** Keep Claude for deep-dossier client work (the current production use case). Parallel is a future candidate for batch screening only — its $0.10/run economics unlock workflows like "give me a quick read on these 20 prospects" that Claude can't do affordably. Don't build that until there's actual demand.
+
+**Side benefit:** the benchmark surfaced a citation-discipline issue in the production external-researcher; fixed in the citation-discipline patch landed on main alongside this addendum.
+
+**Reference materials:** the benchmark harness lives on the `feat/parallel-benchmark` branch with results in `bench/results/`. Branch is reference-only — do not merge. Don't re-run this experiment without (a) a different sample (different industries, n ≥ 5) and (b) a specific question the existing data can't answer.
