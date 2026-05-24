@@ -1,0 +1,897 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Claude vs Parallel.ai — External Research Benchmark</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;0,6..72,700;0,6..72,800;1,6..72,400;1,6..72,500&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --paper:     #FBFAF6;
+    --ink:       #14130F;
+    --ink-soft:  #4B4842;
+    --ink-mute:  #7A766D;
+    --rule:      #E2DDD2;
+    --rule-soft: #EFEBE2;
+    --highlight: #F4EFE0;
+    --claude:    #B7461E;
+    --claude-bg: #F6E6DD;
+    --parallel:  #466F87;
+    --parallel-bg: #DFE6EB;
+    --serif: 'Newsreader', Georgia, 'Times New Roman', serif;
+    --mono:  'IBM Plex Mono', 'SF Mono', Menlo, monospace;
+    --tnum:  'tnum' on, 'lnum' on;
+  }
+
+  * { box-sizing: border-box; }
+  html { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
+  body {
+    margin: 0;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: var(--serif);
+    font-size: 18px;
+    line-height: 1.55;
+    font-weight: 400;
+  }
+
+  .report {
+    max-width: 880px;
+    margin: 0 auto;
+    padding: 80px 56px 96px;
+  }
+
+  /* ---------- type ---------- */
+  h1, h2, h3, h4 { font-family: var(--serif); font-weight: 700; letter-spacing: -0.01em; margin: 0; }
+  h1 { font-size: clamp(40px, 7vw, 64px); line-height: 1.02; font-weight: 800; letter-spacing: -0.025em; }
+  h2 { font-size: clamp(28px, 4vw, 38px); line-height: 1.1; margin-top: 0; letter-spacing: -0.015em; }
+  h3 { font-size: 22px; line-height: 1.25; }
+  h4 { font-size: 17px; line-height: 1.35; }
+
+  p { margin: 0 0 1em; }
+  em, i { font-style: italic; font-family: var(--serif); }
+  strong, b { font-weight: 600; }
+  a { color: var(--ink); text-underline-offset: 3px; text-decoration-thickness: 1px; }
+  a:hover { color: var(--claude); }
+
+  .eyebrow {
+    font-family: var(--mono);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.16em;
+    color: var(--ink-mute);
+    margin: 0 0 14px;
+    font-weight: 500;
+    font-feature-settings: var(--tnum);
+  }
+
+  .num, .mono { font-family: var(--mono); font-feature-settings: var(--tnum); font-weight: 500; }
+
+  /* ---------- section spacing ---------- */
+  section { padding: 56px 0; border-top: 1px solid var(--rule); }
+  section:first-of-type { border-top: 0; padding-top: 0; }
+  section > .eyebrow:first-child + h2 { margin-bottom: 24px; }
+
+  /* ---------- header ---------- */
+  .report > header {
+    padding-bottom: 56px;
+    border-bottom: 4px solid var(--ink);
+    margin-bottom: 0;
+  }
+  .report > header .eyebrow { display: flex; align-items: center; gap: 16px; }
+  .report > header .eyebrow::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--rule);
+  }
+  .report > header h1 { margin-top: 8px; }
+  .subtitle {
+    font-size: 22px;
+    color: var(--ink-soft);
+    font-style: italic;
+    margin: 18px 0 28px;
+    max-width: 640px;
+    font-weight: 400;
+  }
+  .meta-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 24px;
+    font-family: var(--mono);
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--ink-mute);
+    font-feature-settings: var(--tnum);
+  }
+  .meta-row span { display: inline-flex; align-items: center; gap: 8px; }
+  .meta-row span::before { content: '◆'; color: var(--claude); font-size: 8px; }
+
+  /* ---------- lede ---------- */
+  .lede { padding-top: 56px; padding-bottom: 48px; border-top: 0; }
+  .lede-grid {
+    display: grid;
+    grid-template-columns: 1fr 280px;
+    gap: 56px;
+    align-items: start;
+  }
+  .lede-prose p { font-size: 22px; line-height: 1.5; color: var(--ink); margin: 0 0 1em; }
+  .lede-prose p:last-child { margin-bottom: 0; }
+  .dropcap::first-letter {
+    font-family: var(--serif);
+    font-weight: 800;
+    font-size: 5.4em;
+    line-height: 0.85;
+    float: left;
+    padding: 6px 12px 0 0;
+    color: var(--ink);
+  }
+
+  .recommendation {
+    background: var(--highlight);
+    border-left: 4px solid var(--claude);
+    padding: 24px 24px 22px;
+    font-family: var(--serif);
+  }
+  .recommendation .eyebrow { margin-bottom: 8px; }
+  .recommendation p { margin: 0 0 8px; font-size: 16px; line-height: 1.5; }
+  .recommendation p:last-child { margin-bottom: 0; }
+  .recommendation strong { font-weight: 700; }
+
+  /* ---------- at a glance ---------- */
+  .at-a-glance .stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0;
+    border-top: 1px solid var(--ink);
+    border-bottom: 1px solid var(--ink);
+    margin-top: 16px;
+  }
+  .stat {
+    padding: 32px 24px 28px;
+    border-left: 1px solid var(--rule);
+  }
+  .stat:first-child { border-left: 0; padding-left: 0; }
+  .stat:last-child { padding-right: 0; }
+  .stat-value {
+    font-family: var(--mono);
+    font-size: clamp(44px, 6vw, 60px);
+    line-height: 1;
+    font-weight: 600;
+    color: var(--ink);
+    margin: 0 0 10px;
+    font-feature-settings: var(--tnum);
+    letter-spacing: -0.02em;
+  }
+  .stat-value .unit { font-size: 0.45em; color: var(--ink-mute); margin-left: 4px; letter-spacing: 0; }
+  .stat-label {
+    font-family: var(--mono);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    color: var(--ink-mute);
+    margin: 0 0 6px;
+    font-weight: 500;
+  }
+  .stat-detail {
+    font-family: var(--serif);
+    font-size: 14px;
+    color: var(--ink-soft);
+    margin: 0;
+    line-height: 1.45;
+  }
+
+  /* ---------- quality / bars ---------- */
+  .criterion {
+    display: grid;
+    grid-template-columns: 200px 1fr 72px;
+    gap: 24px;
+    align-items: center;
+    padding: 18px 0;
+    border-bottom: 1px solid var(--rule-soft);
+  }
+  .criterion:last-of-type { border-bottom: 1px solid var(--ink); }
+  .criterion h3 {
+    font-family: var(--serif);
+    font-size: 16px;
+    font-weight: 600;
+    line-height: 1.25;
+    margin: 0;
+    text-transform: none;
+    letter-spacing: 0;
+  }
+  .criterion-name {
+    display: block;
+    font-family: var(--mono);
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--ink-mute);
+    font-weight: 500;
+    margin-top: 4px;
+  }
+  .bars-pair { display: flex; flex-direction: column; gap: 6px; }
+  .bar-row {
+    display: grid;
+    grid-template-columns: 64px 1fr 48px;
+    gap: 12px;
+    align-items: center;
+  }
+  .bar-tag {
+    font-family: var(--mono);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    font-weight: 500;
+  }
+  .bar-tag.claude { color: var(--claude); }
+  .bar-tag.parallel { color: var(--parallel); }
+  .bar-track {
+    height: 14px;
+    background: var(--rule-soft);
+    position: relative;
+  }
+  .bar-fill {
+    height: 100%;
+    display: block;
+  }
+  .bar-fill.claude { background: var(--claude); }
+  .bar-fill.parallel { background: var(--parallel); }
+  .bar-num {
+    font-family: var(--mono);
+    font-size: 14px;
+    font-weight: 600;
+    font-feature-settings: var(--tnum);
+    color: var(--ink);
+    text-align: right;
+  }
+  .delta {
+    font-family: var(--mono);
+    font-size: 14px;
+    font-weight: 600;
+    text-align: right;
+    color: var(--ink-soft);
+    font-feature-settings: var(--tnum);
+  }
+  .delta.decisive { color: var(--claude); font-weight: 700; }
+
+  .commentary {
+    font-family: var(--serif);
+    font-size: 17px;
+    line-height: 1.55;
+    color: var(--ink);
+    max-width: 640px;
+    margin: 28px 0 0;
+  }
+  .commentary strong { font-weight: 600; }
+
+  .audit-callout {
+    margin-top: 32px;
+    padding: 22px 26px;
+    background: var(--rule-soft);
+    border-left: 3px solid var(--ink);
+  }
+  .audit-callout .eyebrow { margin-bottom: 10px; }
+  .audit-callout p { margin: 0 0 8px; font-size: 15px; line-height: 1.5; }
+  .audit-callout p:last-child { margin: 0; }
+  .audit-callout .footnote {
+    font-size: 12px;
+    color: var(--ink-mute);
+    font-style: italic;
+    line-height: 1.5;
+    margin-top: 10px;
+  }
+  .audit-callout .audit-num.claude { color: var(--claude); font-weight: 700; }
+  .audit-callout .audit-num.parallel { color: var(--parallel); font-weight: 700; }
+
+  /* ---------- per-company ---------- */
+  .companies { display: flex; flex-direction: column; gap: 0; margin-top: 24px; }
+  .company {
+    display: grid;
+    grid-template-columns: 220px 1fr;
+    gap: 40px;
+    padding: 32px 0;
+    border-bottom: 1px solid var(--rule);
+    align-items: start;
+  }
+  .company:last-child { border-bottom: 1px solid var(--ink); }
+  .company-meta h3 { font-size: 22px; line-height: 1.15; margin-bottom: 8px; }
+  .company-ticker {
+    font-family: var(--mono);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--ink-mute);
+    margin: 0 0 14px;
+    font-weight: 500;
+  }
+  .company-stats {
+    font-family: var(--mono);
+    font-size: 12px;
+    line-height: 1.7;
+    color: var(--ink-soft);
+    font-feature-settings: var(--tnum);
+    margin: 14px 0 0;
+  }
+  .company-stats div { display: flex; gap: 10px; }
+  .company-stats span:first-child {
+    color: var(--ink-mute);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    font-size: 10px;
+    width: 64px;
+    padding-top: 3px;
+  }
+  .company-stats .claude-line { color: var(--claude); font-weight: 600; }
+  .company-stats .parallel-line { color: var(--parallel); font-weight: 600; }
+
+  blockquote.verdict {
+    margin: 0;
+    font-family: var(--serif);
+    font-size: 18px;
+    line-height: 1.55;
+    color: var(--ink);
+    font-style: italic;
+    border-left: 3px solid var(--claude);
+    padding: 4px 0 4px 20px;
+  }
+  blockquote.verdict p { margin: 0 0 10px; }
+  blockquote.verdict p:last-of-type { margin-bottom: 14px; }
+  blockquote.verdict footer {
+    font-family: var(--mono);
+    font-size: 11px;
+    font-style: normal;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--ink-mute);
+    font-weight: 500;
+  }
+
+  /* ---------- cost ---------- */
+  table.cost-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-family: var(--mono);
+    font-size: 14px;
+    font-feature-settings: var(--tnum);
+    margin: 16px 0 24px;
+  }
+  .cost-table th, .cost-table td {
+    text-align: right;
+    padding: 12px 12px;
+    border-bottom: 1px solid var(--rule-soft);
+  }
+  .cost-table th:first-child, .cost-table td:first-child { text-align: left; }
+  .cost-table thead th {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--ink-mute);
+    font-weight: 500;
+    border-bottom: 1px solid var(--ink);
+    padding-bottom: 10px;
+  }
+  .cost-table thead th.claude-col { color: var(--claude); }
+  .cost-table thead th.parallel-col { color: var(--parallel); }
+  .cost-table tr.total td, .cost-table tr.total th { border-top: 1px solid var(--ink); border-bottom: 0; padding-top: 14px; font-weight: 600; color: var(--ink); }
+  .cost-table tr.mean td, .cost-table tr.mean th { font-weight: 600; }
+  .cost-table tr.mean td { color: var(--ink); }
+  .cost-table td.claude-col { color: var(--claude); }
+  .cost-table td.parallel-col { color: var(--parallel); }
+
+  .cost-commentary { font-size: 17px; line-height: 1.6; max-width: 640px; margin: 0; }
+  .cost-commentary + .cost-commentary { margin-top: 1em; }
+
+  /* ---------- when to use ---------- */
+  .when-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+    margin-top: 16px;
+  }
+  .use-card {
+    padding: 32px 28px;
+    border: 1px solid var(--ink);
+    background: var(--paper);
+  }
+  .use-card.today { border-color: var(--claude); background: var(--claude-bg); }
+  .use-card.future { border-color: var(--parallel); background: var(--parallel-bg); }
+  .use-card .eyebrow { margin-bottom: 8px; }
+  .use-card.today .eyebrow { color: var(--claude); }
+  .use-card.future .eyebrow { color: var(--parallel); }
+  .use-card h3 { font-size: 28px; line-height: 1.1; margin: 4px 0 14px; letter-spacing: -0.01em; }
+  .use-card p { font-size: 15px; line-height: 1.55; margin: 0 0 10px; color: var(--ink); }
+  .use-card p:last-child { margin-bottom: 0; }
+  .use-card .price {
+    font-family: var(--mono);
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--ink-soft);
+    font-weight: 500;
+    margin-top: 14px;
+    padding-top: 14px;
+    border-top: 1px solid rgba(20,19,15,0.2);
+    font-feature-settings: var(--tnum);
+  }
+
+  /* ---------- caveats ---------- */
+  .caveats h2 { margin-bottom: 12px; }
+  .caveats > .lead {
+    font-size: 17px;
+    color: var(--ink-soft);
+    font-style: italic;
+    max-width: 600px;
+    margin-bottom: 28px;
+  }
+  ol.caveat-list {
+    list-style: none;
+    counter-reset: cav;
+    padding: 0;
+    margin: 0;
+  }
+  ol.caveat-list li {
+    counter-increment: cav;
+    padding: 22px 0 22px 64px;
+    position: relative;
+    border-bottom: 1px solid var(--rule);
+    font-size: 16px;
+    line-height: 1.55;
+  }
+  ol.caveat-list li:last-child { border-bottom: 1px solid var(--ink); }
+  ol.caveat-list li::before {
+    content: counter(cav, decimal-leading-zero);
+    position: absolute;
+    left: 0;
+    top: 22px;
+    font-family: var(--mono);
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--claude);
+    letter-spacing: 0.04em;
+    font-feature-settings: var(--tnum);
+  }
+  ol.caveat-list li h4 { font-size: 16px; font-weight: 700; margin-bottom: 6px; }
+  ol.caveat-list li code {
+    font-family: var(--mono);
+    font-size: 0.88em;
+    background: var(--rule-soft);
+    padding: 1px 5px;
+    border-radius: 2px;
+  }
+
+  /* ---------- appendix ---------- */
+  .appendix .methodology-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 28px;
+    margin-top: 20px;
+  }
+  .method-block {
+    padding: 22px 24px;
+    background: var(--rule-soft);
+    border-top: 2px solid var(--ink);
+  }
+  .method-block h3 { font-size: 16px; margin-bottom: 10px; font-weight: 700; }
+  .method-block p { font-size: 14px; line-height: 1.55; margin: 0 0 8px; color: var(--ink-soft); }
+  .method-block p:last-child { margin-bottom: 0; }
+  .method-block code {
+    font-family: var(--mono);
+    font-size: 0.88em;
+    color: var(--ink);
+    background: rgba(255,255,255,0.55);
+    padding: 1px 5px;
+  }
+  .appendix h3.section-h { font-size: 18px; margin-top: 32px; margin-bottom: 14px; }
+  .appendix ul.refs { list-style: none; padding: 0; margin: 0; font-family: var(--mono); font-size: 13px; line-height: 1.7; font-feature-settings: var(--tnum); }
+  .appendix ul.refs li { padding: 4px 0; }
+  .appendix ul.refs li::before { content: '→ '; color: var(--ink-mute); }
+  .appendix .ref-note { font-size: 14px; color: var(--ink-soft); margin-top: 18px; }
+
+  /* ---------- footer ---------- */
+  .report > footer {
+    padding: 32px 0 0;
+    margin-top: 56px;
+    border-top: 4px solid var(--ink);
+    font-family: var(--mono);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--ink-mute);
+    line-height: 1.7;
+    font-feature-settings: var(--tnum);
+  }
+  .report > footer p { margin: 0 0 4px; }
+
+  /* ---------- responsive ---------- */
+  @media (max-width: 760px) {
+    .report { padding: 48px 24px 64px; }
+    .lede-grid { grid-template-columns: 1fr; gap: 32px; }
+    .at-a-glance .stats { grid-template-columns: 1fr; }
+    .stat { border-left: 0; border-top: 1px solid var(--rule); padding: 20px 0; }
+    .stat:first-child { border-top: 0; padding-top: 0; }
+    .stat:last-child { padding-bottom: 0; }
+    .criterion { grid-template-columns: 1fr; gap: 10px; }
+    .criterion .delta { text-align: left; }
+    .company { grid-template-columns: 1fr; gap: 18px; padding: 24px 0; }
+    .when-grid { grid-template-columns: 1fr; }
+    .appendix .methodology-grid { grid-template-columns: 1fr; }
+    .bar-row { grid-template-columns: 56px 1fr 44px; }
+    h1 { font-size: 42px; }
+  }
+
+  /* ---------- print ---------- */
+  @media print {
+    body { background: #fff; color: #000; font-size: 11pt; }
+    .report { max-width: 100%; padding: 0; }
+    a { color: #000; text-decoration: none; }
+    section { padding: 24pt 0; page-break-inside: avoid; }
+    .at-a-glance, .quality, .per-company, .cost, .when-to-use, .caveats, .appendix { page-break-inside: avoid; }
+    h2 { page-break-after: avoid; }
+    .criterion { page-break-inside: avoid; }
+    .recommendation, .audit-callout, .use-card, .method-block { background: #f5f5f5 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .bar-fill.claude, .bar-fill.parallel { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .lede { page-break-after: auto; }
+    .appendix { page-break-before: always; }
+  }
+</style>
+</head>
+<body>
+<article class="report">
+
+  <header>
+    <p class="eyebrow">Internal benchmark report · v1.0</p>
+    <h1>Claude vs Parallel.ai</h1>
+    <p class="subtitle">Three head-to-head runs on the production external-research stage of the market-research plugin.</p>
+    <div class="meta-row">
+      <span>24 May 2026</span>
+      <span>n = 3 companies</span>
+      <span>AEP · WEC · DaVita</span>
+    </div>
+  </header>
+
+  <section class="lede">
+    <div class="lede-grid">
+      <div class="lede-prose">
+        <p class="dropcap"><strong>Claude won every head-to-head run.</strong> Across the three companies tested, the blind LLM judge picked the production Claude path over Parallel.ai's Task API on all five rubric criteria, with the decisive gap on coverage breadth and citation quality.</p>
+        <p>Parallel.ai is, however, structurally <strong>22× cheaper per run</strong>: $0.10 flat per Task API call vs $2.21 mean pay-per-token for Claude. Latency is essentially tied — close enough that the per-company variance swallows the mean difference.</p>
+      </div>
+      <aside class="recommendation">
+        <p class="eyebrow">Recommendation</p>
+        <p><strong>Keep Claude in production</strong> for deep-dossier client work — the current use case.</p>
+        <p><strong>Park Parallel.ai for future batch screening only.</strong> Don't build the batch workflow until there's demonstrated demand.</p>
+      </aside>
+    </div>
+  </section>
+
+  <section class="at-a-glance">
+    <p class="eyebrow">At a glance</p>
+    <div class="stats">
+      <div class="stat">
+        <p class="stat-value">3<span class="unit">/3</span></p>
+        <p class="stat-label">Quality verdict</p>
+        <p class="stat-detail">Claude wins all three head-to-head runs on the blind judge's overall verdict.</p>
+      </div>
+      <div class="stat">
+        <p class="stat-value">22<span class="unit">×</span></p>
+        <p class="stat-label">Cost ratio</p>
+        <p class="stat-detail">$2.21 mean per Claude run vs $0.10 flat per Parallel pro run.</p>
+      </div>
+      <div class="stat">
+        <p class="stat-value">Tied</p>
+        <p class="stat-label">Latency</p>
+        <p class="stat-detail">6.4 min Claude mean vs 8.1 min Parallel — but Parallel actually won AEP.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="quality">
+    <p class="eyebrow">Quality · Blind judge averages, 1–5</p>
+    <h2>Coverage and citations were the decisive criteria</h2>
+
+    <div class="criterion">
+      <h3>Factual accuracy<span class="criterion-name">factual_accuracy</span></h3>
+      <div class="bars-pair">
+        <div class="bar-row">
+          <span class="bar-tag claude">Claude</span>
+          <div class="bar-track"><span class="bar-fill claude" style="width: 86.6%;"></span></div>
+          <span class="bar-num">4.33</span>
+        </div>
+        <div class="bar-row">
+          <span class="bar-tag parallel">Parallel</span>
+          <div class="bar-track"><span class="bar-fill parallel" style="width: 73.4%;"></span></div>
+          <span class="bar-num">3.67</span>
+        </div>
+      </div>
+      <div class="delta">Δ +0.67</div>
+    </div>
+
+    <div class="criterion">
+      <h3>Citation quality<span class="criterion-name">citation_quality</span></h3>
+      <div class="bars-pair">
+        <div class="bar-row">
+          <span class="bar-tag claude">Claude</span>
+          <div class="bar-track"><span class="bar-fill claude" style="width: 80%;"></span></div>
+          <span class="bar-num">4.00</span>
+        </div>
+        <div class="bar-row">
+          <span class="bar-tag parallel">Parallel</span>
+          <div class="bar-track"><span class="bar-fill parallel" style="width: 60%;"></span></div>
+          <span class="bar-num">3.00</span>
+        </div>
+      </div>
+      <div class="delta decisive">Δ +1.00</div>
+    </div>
+
+    <div class="criterion">
+      <h3>Coverage breadth<span class="criterion-name">coverage_breadth</span></h3>
+      <div class="bars-pair">
+        <div class="bar-row">
+          <span class="bar-tag claude">Claude</span>
+          <div class="bar-track"><span class="bar-fill claude" style="width: 93.4%;"></span></div>
+          <span class="bar-num">4.67</span>
+        </div>
+        <div class="bar-row">
+          <span class="bar-tag parallel">Parallel</span>
+          <div class="bar-track"><span class="bar-fill parallel" style="width: 66.6%;"></span></div>
+          <span class="bar-num">3.33</span>
+        </div>
+      </div>
+      <div class="delta decisive">Δ +1.34</div>
+    </div>
+
+    <div class="criterion">
+      <h3>Recency<span class="criterion-name">recency</span></h3>
+      <div class="bars-pair">
+        <div class="bar-row">
+          <span class="bar-tag claude">Claude</span>
+          <div class="bar-track"><span class="bar-fill claude" style="width: 86.6%;"></span></div>
+          <span class="bar-num">4.33</span>
+        </div>
+        <div class="bar-row">
+          <span class="bar-tag parallel">Parallel</span>
+          <div class="bar-track"><span class="bar-fill parallel" style="width: 80%;"></span></div>
+          <span class="bar-num">4.00</span>
+        </div>
+      </div>
+      <div class="delta">Δ +0.33</div>
+    </div>
+
+    <div class="criterion">
+      <h3>Structural fidelity<span class="criterion-name">structural_fidelity</span></h3>
+      <div class="bars-pair">
+        <div class="bar-row">
+          <span class="bar-tag claude">Claude</span>
+          <div class="bar-track"><span class="bar-fill claude" style="width: 86.6%;"></span></div>
+          <span class="bar-num">4.33</span>
+        </div>
+        <div class="bar-row">
+          <span class="bar-tag parallel">Parallel</span>
+          <div class="bar-track"><span class="bar-fill parallel" style="width: 80%;"></span></div>
+          <span class="bar-num">4.00</span>
+        </div>
+      </div>
+      <div class="delta">Δ +0.33</div>
+    </div>
+
+    <p class="commentary">Two criteria were decisive: <strong>coverage breadth</strong> (+1.34) and <strong>citation quality</strong> (+1.00). The other three were closer — within a third of a point — and the judge flagged every WEC criterion and three of five DaVita criteria as <em>close calls</em>, meaning a human reviewer should expect the per-criterion magnitudes to be noisier than the directional verdict.</p>
+
+    <aside class="audit-callout">
+      <p class="eyebrow">Source-type audit</p>
+      <p>Independent URL-pattern review of each provider's self-classified <code class="mono" style="font-family: var(--mono); font-size: 0.92em; background: rgba(255,255,255,0.65); padding: 1px 5px;">source_type</code> tags (primary / secondary / aggregator):</p>
+      <p>
+        <span class="audit-num claude">Claude 5 / 28 (17.9%)</span> over-claims ·
+        <span class="audit-num parallel">Parallel 1 / 24 (4.2%)</span> over-claims.
+      </p>
+      <p>Most of Claude's over-claims tagged a press-wire URL (<code>prnewswire.com</code>) as <em>primary</em> when the judge read it as <em>secondary</em> — a defensible edge case, not a fabrication. Parallel's self-tagging is meaningfully more honest in absolute terms, and worth noting as a counter-signal against the broader Claude-wins narrative.</p>
+      <p class="footnote">Counts reflect cases where the judge's URL-pattern review disagreed with the self-classification; entries the judge confirmed correct on review are excluded.</p>
+    </aside>
+  </section>
+
+  <section class="per-company">
+    <p class="eyebrow">Per-company verdicts</p>
+    <h2>What each side found and missed</h2>
+
+    <div class="companies">
+      <article class="company">
+        <div class="company-meta">
+          <h3>American Electric Power</h3>
+          <p class="company-ticker">NASDAQ AEP · Regulated electric utility</p>
+          <dl class="company-stats">
+            <div><span>Cost</span><span><span class="claude-line">Claude $2.5230</span> · <span class="parallel-line">Parallel $0.1000</span></span></div>
+            <div><span>Time</span><span><span class="claude-line">Claude 7m 46s</span> · <span class="parallel-line">Parallel 7m 26s</span></span></div>
+            <div><span>Verdict</span><span>Claude wins (B_better)</span></div>
+          </dl>
+        </div>
+        <blockquote class="verdict">
+          <p>Claude is meaningfully stronger across coverage breadth (13 tech-stack items vs Parallel's 2; the data-center thesis fully developed), factual accuracy (catches FY2024 $19.72B vs Parallel's $22.4B; flags generation-capacity discrepancies), and recency (TTM through Dec 2025).</p>
+          <p>Parallel is competent and well-structured but misses the defining hyperscaler / load-growth narrative, the Bloom Energy 1 GW deal, the Google CAA, and the PUCO data-center tariff. Claude also demonstrates better epistemic honesty by surfacing conflicting source data in open questions.</p>
+          <footer>Blind judge · AEP run</footer>
+        </blockquote>
+      </article>
+
+      <article class="company">
+        <div class="company-meta">
+          <h3>WEC Energy Group</h3>
+          <p class="company-ticker">NYSE WEC · Regulated electric utility</p>
+          <dl class="company-stats">
+            <div><span>Cost</span><span><span class="claude-line">Claude $2.2283</span> · <span class="parallel-line">Parallel $0.1000</span></span></div>
+            <div><span>Time</span><span><span class="claude-line">Claude 6m 06s</span> · <span class="parallel-line">Parallel 9m 26s</span></span></div>
+            <div><span>Verdict</span><span>Claude wins (all 5 close calls)</span></div>
+          </dl>
+        </div>
+        <blockquote class="verdict">
+          <p>Claude has stronger primary-source grounding (multiple SEC 10-K filings, illinois.gov ICC press release) versus Parallel's heavy reliance on a single Yahoo Finance earnings summary for most strategic moves. Claude's coverage is more textured with specific operating details (COO consolidation, Peoples Gas SMP regulatory history, large-load tariff economics) and is more honest about gaps (explicit "low" confidence on PitchGrade-sourced tech-stack items).</p>
+          <p>Parallel is competitive on structural fidelity and TL;DR clarity, but Claude's factual accuracy and citation depth are meaningfully better. Scores are within 1 point on most criteria, but the cumulative edge favors Claude.</p>
+          <footer>Blind judge · WEC run</footer>
+        </blockquote>
+      </article>
+
+      <article class="company">
+        <div class="company-meta">
+          <h3>DaVita Inc.</h3>
+          <p class="company-ticker">NYSE DVA · Kidney dialysis services</p>
+          <dl class="company-stats">
+            <div><span>Cost</span><span><span class="claude-line">Claude $1.8857</span> · <span class="parallel-line">Parallel $0.1000</span></span></div>
+            <div><span>Time</span><span><span class="claude-line">Claude 5m 25s</span> · <span class="parallel-line">Parallel 7m 33s</span></span></div>
+            <div><span>Verdict</span><span>Claude wins (depth decisive)</span></div>
+          </dl>
+        </div>
+        <blockquote class="verdict">
+          <p>Claude is materially stronger on coverage breadth — captures the ransomware incident, Berkshire dynamics, the Mozarc JV, the Google Cloud CWOW platform, the DOJ settlement pattern, and Latin America M&amp;A — all of which Parallel missed. Claude's citation quality is also higher: SEC filings, DOJ.gov, the Google Cloud case study, and named trade press, versus Parallel's reliance on IR releases plus Wikipedia and Glassdoor.</p>
+          <p>The two are comparable on recency and structural fidelity. Parallel's only edge is slightly cleaner citation-to-claim alignment, but Claude's depth advantage is decisive.</p>
+          <footer>Blind judge · DaVita run</footer>
+        </blockquote>
+      </article>
+    </div>
+  </section>
+
+  <section class="cost">
+    <p class="eyebrow">Cost &amp; latency</p>
+    <h2>Pay-per-token vs flat-fee Task API</h2>
+
+    <table class="cost-table">
+      <thead>
+        <tr>
+          <th>Company</th>
+          <th class="claude-col">Claude $</th>
+          <th class="parallel-col">Parallel $</th>
+          <th class="claude-col">Claude time</th>
+          <th class="parallel-col">Parallel time</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <th>AEP</th>
+          <td class="claude-col">$2.5230</td>
+          <td class="parallel-col">$0.1000</td>
+          <td class="claude-col">465.92 s</td>
+          <td class="parallel-col">445.90 s</td>
+        </tr>
+        <tr>
+          <th>WEC</th>
+          <td class="claude-col">$2.2283</td>
+          <td class="parallel-col">$0.1000</td>
+          <td class="claude-col">365.89 s</td>
+          <td class="parallel-col">565.85 s</td>
+        </tr>
+        <tr>
+          <th>DaVita</th>
+          <td class="claude-col">$1.8857</td>
+          <td class="parallel-col">$0.1000</td>
+          <td class="claude-col">325.24 s</td>
+          <td class="parallel-col">452.67 s</td>
+        </tr>
+        <tr class="total">
+          <th>Total</th>
+          <td class="claude-col">$6.6370</td>
+          <td class="parallel-col">$0.3000</td>
+          <td class="claude-col">1157.05 s</td>
+          <td class="parallel-col">1464.42 s</td>
+        </tr>
+        <tr class="mean">
+          <th>Mean / run</th>
+          <td class="claude-col">$2.2123</td>
+          <td class="parallel-col">$0.1000</td>
+          <td class="claude-col">385.68 s</td>
+          <td class="parallel-col">488.14 s</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <p class="cost-commentary">The two cost profiles are structurally different. Claude is metered per token (input, output, cache write, cache read), so cost scales with the depth and length of the agent's work — DaVita finished cheaper than AEP because the sub-agent ran fewer turns. Parallel's pro processor is a <strong>flat $0.10 per Task API call</strong> regardless of how much research happens under the hood, with no per-token surcharges; the price is the price.</p>
+
+    <p class="cost-commentary"><strong>Latency carries a per-run nuance worth surfacing.</strong> The mean tilts to Claude by 1.27× (385.68s vs 488.14s), but that headline hides the within-run variance. Parallel actually <em>beat</em> Claude on AEP — 445.9s vs 465.9s, a ~20-second edge to Parallel. The mean only tilts to Claude because WEC and DaVita went the other way by much larger margins (Claude faster by ~200s on WEC and ~127s on DaVita). On a single-company decision, latency is essentially a coin flip; on a batch, Claude has a small edge.</p>
+  </section>
+
+  <section class="when-to-use">
+    <p class="eyebrow">When to use which</p>
+    <h2>Two different jobs, two different tools</h2>
+
+    <div class="when-grid">
+      <div class="use-card today">
+        <p class="eyebrow">Use today</p>
+        <h3>Claude</h3>
+        <p>For deep-dossier client work — the current production use case. Wins on factual accuracy, citation quality, coverage breadth, and recency. Catches entity-level facts and subtle conflicts that Parallel misses.</p>
+        <p>Worth the cost when one dossier informs a high-stakes pursuit: a $2 spend is rounding error against a six-figure engagement.</p>
+        <p class="price">$2.21 mean · ~6.4 min · production</p>
+      </div>
+      <div class="use-card future">
+        <p class="eyebrow">Future candidate</p>
+        <h3>Parallel.ai</h3>
+        <p>For batch screening only — give me a quick read on these 20 prospects. The flat $0.10 economics make workflows possible that Claude can't do affordably.</p>
+        <p>Don't build it until there's demonstrated demand. Quality is real (Parallel scored 3–4 across the board) but materially behind Claude on the depth criteria.</p>
+        <p class="price">$0.10 flat · ~8.1 min · not built</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="caveats">
+    <p class="eyebrow">Caveats</p>
+    <h2>Where this report could be wrong</h2>
+    <p class="lead">These are integrity content — the difference between a report and a sales pitch. Read them.</p>
+
+    <ol class="caveat-list">
+      <li>
+        <h4>n = 3 is a small sample.</h4>
+        Two regulated electric utilities (AEP, WEC) and one healthcare-services business (DaVita). The pattern observed here may not generalize to consumer-goods, fintech, deep-tech, or any company where the underlying source ecosystem differs. The directional verdict is consistent across all three runs, which is encouraging, but a fourth sector could plausibly invert one criterion.
+      </li>
+      <li>
+        <h4>The blind judge had two provenance leaks during the recorded runs.</h4>
+        The judge prompt rendered the de-anonymisation mapping into the user prompt, and the JSON outputs visible to the judge still carried <code>researcher</code> and <code>generated_at</code> fields. Both were fixed in commit <code>a4e6ee7</code>, but that commit landed <em>after</em> the runs completed. The directional verdict survives because the judge's findings are independently verifiable (Bloom Energy, FY2024 $19.72B, Berkshire 45% cap, etc. are real facts in Claude's outputs that are absent in Parallel's) and the coverage_breadth gap is too large to explain by bias alone — but the per-criterion magnitudes may be inflated, particularly on the close criteria (recency, structural fidelity).
+      </li>
+      <li>
+        <h4>Claude token attribution is incomplete.</h4>
+        The <code>claude -p --output-format json</code> response surfaces parent-session tokens only, not the tokens consumed by the spawned <code>external-researcher</code> sub-agent. The <code>total_cost_usd</code> field <em>is</em> accurate — that's the load-bearing number for the cost comparison and the figure used throughout this report — but a per-agent breakdown is not available from the current CLI shape. If finer attribution becomes important, the workaround is parsing the session log.
+      </li>
+      <li>
+        <h4>Two real citation issues surfaced in production Claude output on DaVita.</h4>
+        First, the 2014 DOJ $350M settlement page was cited as evidence for a claim about the 2024 $34.5M settlement — a time-mismatched citation. Second, Wikipedia was cited for the employee count when the underlying 10-K was already in Claude's citation list — an aggregator chosen over an available primary source. Both are addressed by a citation-discipline patch landed on <code>main</code> (commit <code>9a080ae</code>); future runs should not exhibit either failure mode.
+      </li>
+    </ol>
+  </section>
+
+  <section class="appendix">
+    <p class="eyebrow">Technical appendix</p>
+    <h2>Methodology and reproducibility</h2>
+
+    <div class="methodology-grid">
+      <div class="method-block">
+        <h3>Claude path</h3>
+        <p>The production <code>external-researcher</code> sub-agent invoked via <code>claude -p</code>, scoped to the external stage only. Entry point: the <code>/market-research:bench-external &lt;company&gt;</code> slash command, which dispatches the sub-agent with explicit output paths into <code>bench/results/claude/&lt;slug&gt;/</code>. Sub-agent tools: <code>WebSearch</code>, <code>WebFetch</code>, <code>Read</code>, <code>Write</code>, <code>Bash</code>. Permission mode: <code>--dangerously-skip-permissions</code> for non-interactive operation.</p>
+      </div>
+      <div class="method-block">
+        <h3>Parallel.ai path</h3>
+        <p>Task API in Deep Research mode via the <code>parallel-web</code> Python SDK. Processor: <code>pro</code> (blocking; 2–10 min latency band per Parallel docs). <code>output_schema</code> set to the same canonical <code>bench/schema.json</code> the Claude path targets, so both implementations write into an identical shape. Per-field reasoning and citations available via <code>result.output.basis</code>, persisted to <code>parallel_basis.json</code> per run.</p>
+      </div>
+      <div class="method-block">
+        <h3>Judge configuration</h3>
+        <p>Claude Opus 4.7 via the Anthropic SDK, scoring each pair blind (A vs B random assignment, mapping logged for audit). Rubric: factual_accuracy, citation_quality, coverage_breadth, recency, structural_fidelity — all 1–5 with required reasoning. URL-pattern audit independently classifies a sample of each output's citations and reports over-claims. Mapping is overwritten by the harness post-call, so the judge's own mapping output cannot bias attribution.</p>
+      </div>
+      <div class="method-block">
+        <h3>Cost calculation</h3>
+        <p>Claude: <code>total_cost_usd</code> from the <code>claude -p --output-format json</code> response, sourced directly from Claude Code's per-model metering. Parallel: $0.10 flat per task per <code>bench/pricing.json</code> (the pro processor's published rate, 100 task-runs per $10). No prompt-cache complications on either side — Claude figures include cache reads/writes naturally; Parallel is per-task with no per-token meter.</p>
+      </div>
+    </div>
+
+    <h3 class="section-h">Run artifacts</h3>
+    <ul class="refs">
+      <li><code>bench/results/american-electric-power-20260523T010745Z/</code></li>
+      <li><code>bench/results/wec-energy-group-20260524T175708Z/</code></li>
+      <li><code>bench/results/davita-inc-20260524T181313Z/</code></li>
+      <li><code>bench/results/summary-20260524T182733Z.md</code></li>
+    </ul>
+    <p class="ref-note">Each run dir contains <code>comparison.md</code>, <code>judge_scores.json</code>, <code>metrics.json</code>, both providers' <code>.md</code> and <code>.json</code> outputs, and Parallel's <code>parallel_basis.json</code>. The harness code itself (<code>run.py</code>, <code>judge.py</code>, <code>schema.json</code>, the <code>bench-external</code> slash command) lives in <a href="https://github.com/mstella-ahead/claude-market-research/pull/1">PR #1</a>, which is reference-only and not intended to merge.</p>
+  </section>
+
+  <footer>
+    <p>Internal report · v1.0 · 24 May 2026</p>
+    <p>Generated from artifacts in <code style="font-family: inherit;">bench/results/</code> on the <code style="font-family: inherit;">feat/parallel-benchmark</code> branch.</p>
+  </footer>
+
+</article>
+</body>
+</html>
