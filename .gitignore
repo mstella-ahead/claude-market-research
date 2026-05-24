@@ -1,5 +1,6 @@
 # Generated run outputs — these contain client research and should NEVER be committed
 runs/
+bench/results/
 *.pptx
 *.xlsx
 *.docx
